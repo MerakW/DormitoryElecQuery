@@ -5,6 +5,10 @@ from json import load
 from os import path
 import dataProcess
 import  alert
+import datetime
+
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 #获取当前文件路径，转换为相对路径，并为配置文件路径赋值
 dirPath = path.dirname(path.abspath(__file__))
 filePath = path.join(dirPath, "Config.json")
@@ -23,7 +27,7 @@ def main():
         alertContent = "当前水表余量" + str(waterRemain) + "吨，已不足3吨，请及时充值。（点击跳转）"
         alert.sendAlert(alertContent , "水表余量不足3吨" , "water")
     else:
-        DValue = waterRemain - latestWater
+        DValue = latestWater - waterRemain
         NotifyContent = "当前水表剩余" + str(waterRemain) + "吨，相比昨日少了"+ str(DValue) + "吨。"
         alert.sendNotify(NotifyContent, "水表每日汇报", "water")
     time.sleep(5)
@@ -31,13 +35,16 @@ def main():
         alertContent = "当前电表余量" + str(elecRemain) + "kWh，已不足kWh，请及时充值。（点击跳转）"
         alert.sendAlert(alertContent , "电表余量不足25kWh" , "elec")
     else:
-        DValue = elecRemain - latestElec
+        DValue = latestElec - elecRemain
         NotifyContent = "当前电表剩余" + str(elecRemain) + "kWh，相比昨日少了"+ str(DValue) + "kWh。"
         alert.sendNotify(NotifyContent, "电表每日汇报", "elec")
+    dataProcess.addData(waterRemain, elecRemain)
     pass
 
+print(timestamp, " ", "First run start.")
 main()
-print("First run complete.")
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+print(timestamp, " ", "First run complete.")
 
 # create a scheduler object
 scheduler = sched.scheduler(time.time, time.sleep)
@@ -53,5 +60,6 @@ scheduler.enterabs(next_run, 1, main)
     
 while True:
     # start the scheduler
-    print("Waiting for next run")
+    print(timestamp, " ", "Waiting for next run")
     scheduler.run()
+    
