@@ -1,0 +1,8 @@
+{
+	"passWd": "password123",
+	"User": "username",
+	"waterURL": "http://admin.merak.icu:9632/test2.php",
+	"elecURL": "http://admin.merak.icu:9632/test.php",
+	"Interval": 10,
+	"RoomID": 1234
+}
