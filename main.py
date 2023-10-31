@@ -1,10 +1,10 @@
 import getData
-from requests import get
 import sched
 import time
 from json import load
 from os import path
-
+import dataProcess
+import  alert
 #获取当前文件路径，转换为相对路径，并为配置文件路径赋值
 dirPath = path.dirname(path.abspath(__file__))
 filePath = path.join(dirPath, "Config.json")
@@ -15,9 +15,29 @@ with open(filePath,'r') as fr:
     
 
 def main():
-    waterRemain = getData.getWater(Configs["waterURL"])
-    elecRemain = getData.getElec(Configs["elecURL"])
+    waterRemain = float(getData.getWater(Configs["waterURL"]))
+    elecRemain = float(getData.getElec(Configs["elecURL"]))
+    latestWater =float(dataProcess.getLatestRecord("water")[1])
+    latestElec = float(dataProcess.getLatestRecord("elec")[1])
+    if  waterRemain <= 3:
+        alertContent = "当前水表余量" + str(waterRemain) + "吨，已不足3吨，请及时充值。（点击跳转）"
+        alert.sendAlert(alertContent , "水表余量不足3吨" , "water")
+    else:
+        DValue = waterRemain - latestWater
+        NotifyContent = "当前水表剩余" + str(waterRemain) + "吨，相比昨日少了"+ str(DValue) + "吨。"
+        alert.sendNotify(NotifyContent, "水表每日汇报", "water")
+    time.sleep(5)
+    if  elecRemain <= 25:
+        alertContent = "当前电表余量" + str(elecRemain) + "kWh，已不足kWh，请及时充值。（点击跳转）"
+        alert.sendAlert(alertContent , "电表余量不足25kWh" , "elec")
+    else:
+        DValue = elecRemain - latestElec
+        NotifyContent = "当前电表剩余" + str(elecRemain) + "kWh，相比昨日少了"+ str(DValue) + "kWh。"
+        alert.sendNotify(NotifyContent, "电表每日汇报", "elec")
     pass
+
+main()
+print("First run complete.")
 
 # create a scheduler object
 scheduler = sched.scheduler(time.time, time.sleep)

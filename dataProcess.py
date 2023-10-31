@@ -21,3 +21,17 @@ def addData(water, elec):   #添加数据
     with open(EfilePath, mode='a', newline='') as elec_file:
         elec_writer = csv.writer(elec_file)
         elec_writer.writerow([timestamp, elec])
+
+def getLatestRecord(Form):  #获取最新记录
+    if  Form == "water":
+        file = WfilePath
+    elif  Form == "elec":
+        file = EfilePath
+    else:
+        return "Error: Invalid type"
+    with open(file, mode='r') as csv_file:
+        csvReader = csv.reader(csv_file)
+        latestRecord = []
+        for row in csvReader:
+                latestRecord = row
+        return latestRecord
