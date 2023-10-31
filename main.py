@@ -11,16 +11,27 @@ filePath = path.join(dirPath, "Config.json")
 
 #读取配置文件
 with open(filePath,'r') as fr: 
-	Configs = load(fr) 
+	Configs = load(fr)
+    
 
 def main():
     waterRemain = getData.getWater(Configs["waterURL"])
     elecRemain = getData.getElec(Configs["elecURL"])
     pass
 
-sche.every().day.at("09:00").do(main)
+# create a scheduler object
+scheduler = sched.scheduler(time.time, time.sleep)
 
+ # calculate the number of seconds until 10am
+now = time.time()
+next_run = now - (now % 86400) + (10 * 3600)
+if next_run < now:
+    next_run += 86400
+
+# schedule the first run for 10am
+scheduler.enterabs(next_run, 1, main)
+    
 while True:
-    sche.run_pending()
-    time.sleep(1)
-
+    # start the scheduler
+    print("Waiting for next run")
+    scheduler.run()
