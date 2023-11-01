@@ -1,11 +1,11 @@
-import getData
-import sched
+import schedule
 import time
 from json import load
 from os import path
-import dataProcess
-import  alert
 import datetime
+import threading
+import keyboard
+import query
 
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -16,50 +16,48 @@ filePath = path.join(dirPath, "Config.json")
 #读取配置文件
 with open(filePath,'r') as fr: 
 	Configs = load(fr)
-    
+
+Today = datetime.date.today()
+Tomorrow = Today + datetime.timedelta(days=1)
+
+print(timestamp, " ", "First report start.")
+query.Report()
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+print(timestamp, " ", "First report complete.")
+
+print(timestamp, " ", "Waiting for next report at ", Tomorrow, "10:30.")
+
+def Daily():
+    query.dailyReport()
+
+def Hourly():
+    query.queryHourly()
+
+# 每天的10:30执行Main函数
+schedule.every().day.at("10:30").do(Daily)
+
+# 每2小时执行Hourly函数
+schedule.every().day.at("00:00").do(Hourly)
+schedule.every().day.at("02:00").do(Hourly)
+schedule.every().day.at("04:00").do(Hourly)
+schedule.every().day.at("06:00").do(Hourly)
+schedule.every().day.at("08:00").do(Hourly)
+schedule.every().day.at("10:00").do(Hourly)
+schedule.every().day.at("12:00").do(Hourly)
+schedule.every().day.at("14:00").do(Hourly)
+schedule.every().day.at("16:00").do(Hourly)
+schedule.every().day.at("18:00").do(Hourly)
+schedule.every().day.at("20:00").do(Hourly)
+schedule.every().day.at("22:00").do(Hourly)
 
 def main():
-    waterRemain = float(getData.getWater(Configs["waterURL"]))
-    elecRemain = float(getData.getElec(Configs["elecURL"]))
-    latestWater =float(dataProcess.getLatestRecord("water")[1])
-    latestElec = float(dataProcess.getLatestRecord("elec")[1])
-    if  waterRemain <= 3:
-        alertContent = "当前水表余量" + str(waterRemain) + "吨，已不足3吨，请及时充值。（点击跳转）"
-        alert.sendAlert(alertContent , "水表余量不足3吨" , "water")
-    else:
-        DValue = latestWater - waterRemain
-        NotifyContent = "当前水表剩余" + str(waterRemain) + "吨，相比昨日少了"+ str(DValue) + "吨。"
-        alert.sendNotify(NotifyContent, "水表每日汇报", "water")
-    time.sleep(5)
-    if  elecRemain <= 25:
-        alertContent = "当前电表余量" + str(elecRemain) + "kWh，已不足kWh，请及时充值。（点击跳转）"
-        alert.sendAlert(alertContent , "电表余量不足25kWh" , "elec")
-    else:
-        DValue = latestElec - elecRemain
-        NotifyContent = "当前电表剩余" + str(elecRemain) + "kWh，相比昨日少了"+ str(DValue) + "kWh。"
-        alert.sendNotify(NotifyContent, "电表每日汇报", "elec")
-    dataProcess.addData(waterRemain, elecRemain)
-    pass
+    print(timestamp, " ", "Main thread start.")
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
-print(timestamp, " ", "First run start.")
-main()
-timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-print(timestamp, " ", "First run complete.")
-
-# create a scheduler object
-scheduler = sched.scheduler(time.time, time.sleep)
-
- # calculate the number of seconds until 10am
-now = time.time()
-next_run = now - (now % 86400) + (10 * 3600)
-if next_run < now:
-    next_run += 86400
-
-# schedule the first run for 10am
-scheduler.enterabs(next_run, 1, main)
-    
-while True:
-    # start the scheduler
-    print(timestamp, " ", "Waiting for next run")
-    scheduler.run()
-    
+# 创建线程并启动
+t = threading.Thread(target=main, daemon=True)
+t.start()
+# 等待esc键按下
+keyboard.wait('esc')
